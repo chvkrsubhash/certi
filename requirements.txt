@@ -3,3 +3,4 @@ pymongo==4.6.1
 Flask-Mail==0.9.1
 Werkzeug==2.3.7
 reportlab
+pytz
