@@ -1,0 +1,169 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html>
+<head>
+    <title>Schedule Exam</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+    .policy-box {
+        background: #fffbe6;
+        border: 1px solid #ffd700;
+        border-radius: 8px;
+        padding: 1.2rem 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .policy-cards {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+    }
+    .policy-card {
+        background: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+        padding: 1rem 1.2rem;
+        flex: 1 1 220px;
+        min-width: 200px;
+        font-size: 1rem;
+        color: #333;
+        transition: box-shadow 0.2s;
+    }
+    .policy-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.10);
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+      <div class="menu-icon" onclick="toggleMenu()">
+        &#9776;
+      </div>
+      <div id="menu" class="menu">
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('upcoming_exams') }}">Upcoming Exams</a>
+        <a href="{{ url_for('certificates') }}">Certificates</a>
+        <a href="{{ url_for('profile') }}">Profile</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+      </div>
+    </nav>
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        <div class="exam-item">
+            <h2>Schedule Exam: {{ exam.title }}</h2>
+            <p>{{ exam.description }}</p>
+            <p>Price: ${{ exam.price }}</p>
+            <div class="policy-box">
+                <strong>Exam Policies (must accept to schedule):</strong>
+                <div class="policy-cards">
+                    <div class="policy-card">No cheating or use of unauthorized materials.</div>
+                    <div class="policy-card">Do not switch tabs or windows during the exam.</div>
+                    <div class="policy-card">Do not exit fullscreen mode while taking the test.</div>
+                    <div class="policy-card">Leaving the test page may result in disqualification.</div>
+                    <div class="policy-card">All activity is monitored and recorded for integrity.</div>
+                </div>
+            </div>
+            {% if cooldown %}
+                <p class="flash flash-error">{{ cooldown_msg }}</p>
+            {% endif %}
+            <form method="post" id="scheduleForm">
+                <label for="certificate_name">Name for Certificate (cannot be changed later):</label>
+                <input type="text" id="certificate_name" name="certificate_name" required {% if cooldown %}disabled{% endif %}>
+                <label for="date">Select Date & Time (IST):</label>
+                <input type="datetime-local" id="date" name="date" required {% if cooldown %}disabled{% endif %}>
+                <div style="font-size:0.97em;color:#b57c00;margin-bottom:0.5rem;">Please select the date and time in IST (Indian Standard Time).</div>
+                <div id="ist-confirm" style="font-size:1em;color:#00796b;margin-bottom:1rem;"></div>
+                <label for="coupon_code">Coupon Code (optional):</label>
+                <input type="text" id="coupon_code" name="coupon_code" placeholder="Enter coupon code" {% if cooldown %}disabled{% endif %}>
+                <div style="margin:1.5rem 0 1rem 0;">
+                    <input type="checkbox" id="accept_policy" name="accept_policy" required {% if cooldown %}disabled{% endif %}>
+                    <label for="accept_policy"><strong>I have read and accept the exam policies above.</strong></label>
+                </div>
+                <input type="submit" value="Confirm Schedule" id="submitBtn" {% if cooldown %}disabled{% endif %}>
+            </form>
+        </div>
+    </main>
+    <script>
+    function toggleMenu() {
+      var menu = document.getElementById('menu');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+    // Disable submit unless policy is checked
+    document.addEventListener('DOMContentLoaded', function() {
+      var form = document.getElementById('scheduleForm');
+      var policy = document.getElementById('accept_policy');
+      var submitBtn = document.getElementById('submitBtn');
+      if (policy && submitBtn) {
+        function toggleBtn() {
+          submitBtn.disabled = !policy.checked;
+        }
+        policy.addEventListener('change', toggleBtn);
+        toggleBtn();
+      }
+      // Show selected value as confirmation (no conversion, just show input value as IST)
+      var dateInput = document.getElementById('date');
+      var istConfirm = document.getElementById('ist-confirm');
+      function showIST() {
+        if (!dateInput.value) { istConfirm.innerText = ''; return; }
+        // Format as YYYY-MM-DD HH:MM IST from input value
+        var val = dateInput.value;
+        if (val.length === 16) {
+          var datePart = val.substring(0,10);
+          var timePart = val.substring(11,16);
+          istConfirm.innerText = 'You selected: ' + datePart + ' ' + timePart + ' IST';
+        } else {
+          istConfirm.innerText = 'You selected: ' + val + ' IST';
+        }
+      }
+      dateInput && dateInput.addEventListener('input', showIST);
+      showIST();
+    });
+    </script>
+</body>
+</html>

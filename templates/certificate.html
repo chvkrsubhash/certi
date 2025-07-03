@@ -1,0 +1,133 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html>
+<head>
+    <title>Certificate</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+    .certificate-box {
+        max-width: 600px;
+        margin: 2rem auto;
+        background: #fffbe6;
+        border: 2px solid #ffd700;
+        border-radius: 16px;
+        box-shadow: 0 4px 24px #e0e0e0;
+        padding: 2.5rem 2rem;
+        text-align: center;
+    }
+    .certificate-title {
+        font-size: 2.2rem;
+        color: #bfa100;
+        margin-bottom: 1.5rem;
+        font-family: 'Georgia', serif;
+    }
+    .certificate-details {
+        font-size: 1.2rem;
+        color: #333;
+        margin-bottom: 2rem;
+    }
+    .certificate-signature {
+        margin-top: 2.5rem;
+        font-family: 'Brush Script MT', cursive;
+        font-size: 1.3rem;
+        color: #888;
+    }
+    .print-btn {
+        background: #ffd700;
+        color: #222;
+        border: none;
+        border-radius: 5px;
+        padding: 0.6rem 1.4rem;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        margin-top: 1.5rem;
+        transition: background 0.2s;
+    }
+    .print-btn:hover {
+        background: #ffe066;
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+      <div class="menu-icon" onclick="toggleMenu()">
+        &#9776;
+      </div>
+      <div id="menu" class="menu">
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('upcoming_exams') }}">Upcoming Exams</a>
+        <a href="{{ url_for('certificates') }}">Certificates</a>
+        <a href="{{ url_for('profile') }}">Profile</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+      </div>
+    </nav>
+    <main>
+        <div class="certificate-box">
+            <div class="certificate-title">Certificate of Achievement</div>
+            <div class="certificate-details">
+                This is to certify that<br><br>
+                <strong>{{ result.user_name if result.user_name else 'Student' }}</strong><br><br>
+                has successfully passed the<br><br>
+                <strong>{{ exam.title }}</strong><br><br>
+                exam with a score of <strong>{{ result.percentage|round(2) }}%</strong>.<br><br>
+                Date: {{ date_ist.strftime('%Y-%m-%d') if date_ist else '' }} IST
+            </div>
+            <div class="certificate-signature">
+                <em>Exam Portal Team</em>
+            </div>
+            {% if result.certificate_code %}
+            <div style="margin: 2rem 0 1rem 0;">
+                <a href="{{ url_for('download_certificate_pdf', schedule_id=result.schedule_id) }}" class="print-btn" style="margin-right:1rem;">Download PDF</a>
+                <a href="{{ url_for('verify_certificate', code=result.certificate_code) }}" class="print-btn" style="background:#bfa100;color:#fff;">Verify Certificate</a>
+            </div>
+            {% endif %}
+            <button class="print-btn" onclick="window.print()">Print Certificate</button>
+        </div>
+    </main>
+    <script>
+    function toggleMenu() {
+      var menu = document.getElementById('menu');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+    </script>
+</body>
+</html>

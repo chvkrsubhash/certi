@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Certificates</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+      <div class="menu-icon" onclick="toggleMenu()">
+        &#9776;
+      </div>
+      <div id="menu" class="menu">
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('upcoming_exams') }}">Upcoming Exams</a>
+        <a href="{{ url_for('certificates') }}">Certificates</a>
+        <a href="{{ url_for('profile') }}">Profile</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+      </div>
+    </nav>
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        <h2>Certificates</h2>
+        <ul>
+          {% for c in certificates %}
+            <li>
+              <strong>{{ c.exam.title }}</strong> - {{ c.percentage|round(2) }}%<br>
+              <a href="{{ url_for('certificate', schedule_id=c.schedule_id) }}">View Certificate</a>
+            </li>
+          {% else %}
+            <li>No certificates yet.</li>
+          {% endfor %}
+        </ul>
+    </main>
+    <script>
+    function toggleMenu() {
+      var menu = document.getElementById('menu');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,172 @@
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f5f7fa;
+    margin: 0;
+    padding: 0;
+    color: #222;
+}
+
+.navbar {
+    background: #2d3e50;
+    padding: 0.5rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    box-shadow: 0 2px 8px #e0e0e0;
+}
+.menu-icon {
+    font-size: 2rem;
+    color: #fff;
+    cursor: pointer;
+    margin-right: 1rem;
+}
+.menu {
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px #ccc;
+    padding: 0.5rem 0;
+    position: absolute;
+    top: 3.5rem;
+    left: 2rem;
+    min-width: 180px;
+    z-index: 100;
+}
+.menu a {
+    display: block;
+    padding: 12px 24px;
+    text-decoration: none;
+    color: #2d3e50;
+    font-weight: 500;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.2s;
+}
+.menu a:last-child {
+    border-bottom: none;
+}
+.menu a:hover {
+    background: #f5f7fa;
+    color: #007bff;
+}
+@media (min-width: 600px) {
+    .menu {
+        display: flex !important;
+        position: static;
+        background: none;
+        box-shadow: none;
+        border-radius: 0;
+        padding: 0;
+        min-width: 0;
+    }
+    .menu a {
+        display: inline-block;
+        padding: 10px 18px;
+        border-bottom: none;
+        color: #fff;
+        background: none;
+    }
+    .menu a:hover {
+        background: #1a2533;
+        color: #ffd700;
+    }
+    .menu-icon {
+        display: none;
+    }
+}
+main {
+    max-width: 700px;
+    margin: 2.5rem auto;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 24px #e0e0e0;
+    padding: 2.5rem 2rem 2rem 2rem;
+}
+h2, h3 {
+    color: #2d3e50;
+    margin-top: 0;
+}
+.exam-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+.exam-item {
+    background: #f8fafc;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem 1.2rem;
+    box-shadow: 0 2px 8px #f0f0f0;
+}
+button, .btn {
+    background: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 0.6rem 1.4rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 0.7rem;
+}
+button:hover, .btn:hover {
+    background: #0056b3;
+}
+ul {
+    list-style: none;
+    padding: 0;
+}
+li {
+    background: #f8fafc;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    padding: 1.2rem 1rem;
+    box-shadow: 0 2px 8px #f0f0f0;
+    font-size: 1.05rem;
+}
+li span {
+    font-size: 0.98rem;
+    color: #888;
+}
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    margin-top: 1.5rem;
+}
+input, select {
+    padding: 0.7rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+input[type="submit"], input[type="button"] {
+    background: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 0.6rem 1.4rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+input[type="submit"]:hover, input[type="button"]:hover {
+    background: #0056b3;
+}
+.flash {
+    padding: 1rem 1.5rem;
+    border-radius: 6px;
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+}
+.flash-success {
+    background: #e6ffed;
+    color: #1a7f37;
+    border: 1px solid #b7f5c2;
+}
+.flash-error {
+    background: #ffeaea;
+    color: #c00;
+    border: 1px solid #f5b7b7;
+}

@@ -1,0 +1,150 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html>
+<head>
+    <title>Take Exam</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!--<header>
+        <nav>
+            <h1>Exam Portal</h1>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+        </nav>
+    </header>-->
+    <main>
+        <div class="card">
+            <h2>Exam</h2>
+            {% if not show_questions %}
+                <div id="timer" style="font-size:1.3rem;margin-bottom:1.5rem;"></div>
+                <div class="flash flash-error">The exam will be available at {{ scheduled_time.strftime('%Y-%m-%d %H:%M') }} IST. Please wait for the timer to reach zero.</div>
+                <script>
+                // Simple countdown timer using backend-passed IST time (no conversion)
+                var scheduledTime = new Date("{{ scheduled_time.strftime('%Y-%m-%dT%H:%M:%S') }}");
+                var timerDiv = document.getElementById('timer');
+                function updateTimer() {
+                  var current = new Date();
+                  var distance = scheduledTime - current;
+                  if (distance < 0) {
+                    timerDiv.innerHTML = 'Exam is now available. Please refresh the page.';
+                    return;
+                  }
+                  var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                  var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                  var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                  timerDiv.innerHTML = 'Time until exam: ' + (hours > 0 ? hours + ':' : '') + (minutes < 10 ? '0' : '') + minutes + ':' + (seconds < 10 ? '0' : '') + seconds + ' (IST)';
+                  setTimeout(updateTimer, 1000);
+                }
+                updateTimer();
+                </script>
+            {% else %}
+                <div id="timer">Time Left: 60:00</div>
+                <form method="POST" action="{{ url_for('submit_exam', schedule_id=schedule_id) }}" id="examForm">
+                    {% for question in questions %}
+                        <div class="question">
+                            <p>{{ question.question }}</p>
+                            {% for option in question.options %}
+                                <label><input type="radio" name="{{ question._id }}" value="{{ option }}" required> {{ option }}</label><br>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    <button type="submit">Submit Exam</button>
+                </form>
+                <div id="warn" style="color:#b00;font-weight:bold;margin-top:1rem;"></div>
+                <script>
+                // Tab shift and fullscreen tracking
+                var tabShiftCount = 0;
+                var fullscreenExitCount = 0;
+                var maxAllowed = 5;
+                var form = document.getElementById('examForm');
+                var warnDiv = document.getElementById('warn');
+                // Tab shift
+                document.addEventListener('visibilitychange', function() {
+                  if (document.hidden) {
+                    tabShiftCount++;
+                    warnDiv.innerText = 'Tab/Window switched ' + tabShiftCount + ' times.';
+                    if (tabShiftCount >= maxAllowed) {
+                      warnDiv.innerText = 'Tab/Window switched too many times. Exam will be auto-submitted.';
+                      setTimeout(function(){ form.submit(); }, 1000);
+                    }
+                  }
+                });
+                // Fullscreen
+                function isFullScreen() {
+                  return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+                }
+                function fullscreenListener() {
+                  if (!isFullScreen()) {
+                    fullscreenExitCount++;
+                    warnDiv.innerText = 'Fullscreen exited ' + fullscreenExitCount + ' times.';
+                    if (fullscreenExitCount >= maxAllowed) {
+                      warnDiv.innerText = 'Fullscreen exited too many times. Exam will be auto-submitted.';
+                      setTimeout(function(){ form.submit(); }, 1000);
+                    }
+                  }
+                }
+                document.addEventListener('fullscreenchange', fullscreenListener);
+                document.addEventListener('webkitfullscreenchange', fullscreenListener);
+                document.addEventListener('mozfullscreenchange', fullscreenListener);
+                document.addEventListener('MSFullscreenChange', fullscreenListener);
+                // Force fullscreen on load
+                window.onload = function() {
+                  var el = document.documentElement;
+                  if (el.requestFullscreen) el.requestFullscreen();
+                  else if (el.mozRequestFullScreen) el.mozRequestFullScreen();
+                  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+                  else if (el.msRequestFullscreen) el.msRequestFullscreen();
+                };
+                </script>
+            {% endif %}
+        </div>
+    </main>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

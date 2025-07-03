@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Exam Scheduled</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+      <div class="menu-icon" onclick="toggleMenu()">
+        &#9776;
+      </div>
+      <div id="menu" class="menu">
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('upcoming_exams') }}">Upcoming Exams</a>
+        <a href="{{ url_for('certificates') }}">Certificates</a>
+        <a href="{{ url_for('profile') }}">Profile</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+      </div>
+    </nav>
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        <div class="exam-item">
+            <h2>Exam Scheduled!</h2>
+            <p><strong>Exam:</strong> {{ exam.title }}</p>
+            <p><strong>Date & Time:</strong> {{ schedule.date.strftime('%Y-%m-%d %H:%M') }}</p>
+            <p><strong>Amount Paid:</strong> ${{ '%.2f' % schedule.amount_paid }}</p>
+            {% if schedule.coupon_applied %}
+                <p><strong>Coupon Applied:</strong> Yes</p>
+            {% endif %}
+            <p>Your exam has been successfully scheduled. You will receive a confirmation email shortly.</p>
+            <a href="{{ url_for('dashboard') }}" class="btn">Back to Dashboard</a>
+        </div>
+    </main>
+    <script>
+    function toggleMenu() {
+      var menu = document.getElementById('menu');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+    </script>
+</body>
+</html>

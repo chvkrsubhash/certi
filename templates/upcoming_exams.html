@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Upcoming Exams</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+    table.upcoming-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 2rem;
+    }
+    table.upcoming-table th, table.upcoming-table td {
+        border: 1px solid #e0e0e0;
+        padding: 0.9rem 0.7rem;
+        text-align: left;
+    }
+    table.upcoming-table th {
+        background: #f5f7fa;
+        color: #2d3e50;
+        font-weight: 600;
+    }
+    table.upcoming-table tr:nth-child(even) {
+        background: #f8fafc;
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+      <div class="menu-icon" onclick="toggleMenu()">
+        &#9776;
+      </div>
+      <div id="menu" class="menu">
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('upcoming_exams') }}">Upcoming Exams</a>
+        <a href="{{ url_for('certificates') }}">Certificates</a>
+        <a href="{{ url_for('profile') }}">Profile</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+      </div>
+    </nav>
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        <h2>Upcoming Exams</h2>
+        {% if schedules %}
+        <table class="upcoming-table">
+            <thead>
+                <tr>
+                    <th>Exam Title</th>
+                    <th>Date & Time</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for s in schedules %}
+                <tr>
+                    <td>{{ s.exam.title }}</td>
+                    <td>{{ s.date_ist.strftime('%Y-%m-%d %H:%M') }} IST</td>
+                    <td>
+                        {% set completed = false %}
+                        {% for r in s.exam_results if r.schedule_id == s._id %}
+                            {% set completed = true %}
+                        {% endfor %}
+                        {% if completed %}
+                            <button disabled>Completed</button>
+                        {% else %}
+                                <button {% if s.date_ist > now %}disabled title="Exam will be available at {{ s.date_ist.strftime('%Y-%m-%d %H:%M') }} IST"{% endif %}>
+                                  <a href="{{ url_for('exam', schedule_id=s._id) }}">
+                                    Give Test
+                                  </a>
+                                </button>
+                            {% if s.date_ist > now %}
+                                <span style="color:gray; font-size:0.95em;">Exam will be available at {{ s.date_ist.strftime('%Y-%m-%d %H:%M') }} IST</span>
+                            {% endif %}
+                            <br>
+                            {% if not s.time_changed %}
+                                <a href="{{ url_for('change_exam_time', schedule_id=s._id) }}"><button>Change Time</button></a>
+                            {% else %}
+                                <button disabled>Time Changed</button>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+            <p>No upcoming exams scheduled.</p>
+        {% endif %}
+    </main>
+    <script>
+    function toggleMenu() {
+      var menu = document.getElementById('menu');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Change Exam Time</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+      <div class="menu-icon" onclick="toggleMenu()">
+        &#9776;
+      </div>
+      <div id="menu" class="menu">
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('upcoming_exams') }}">Upcoming Exams</a>
+        <a href="{{ url_for('certificates') }}">Certificates</a>
+        <a href="{{ url_for('profile') }}">Profile</a>
+        <a href="{{ url_for('logout') }}">Logout</a>
+      </div>
+    </nav>
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        <div class="exam-item">
+            <h2>Change Exam Time</h2>
+            <p><strong>Exam:</strong> {{ schedule.exam_id }}</p>
+            <p><strong>Current Date & Time:</strong> {{ schedule.date_ist.strftime('%Y-%m-%d %H:%M') }} IST</p>
+            <form method="post">
+                <label for="new_date">Select New Date & Time (IST):</label>
+                <input type="datetime-local" id="new_date" name="new_date" required>
+                <div style="font-size:0.97em;color:#b57c00;margin-bottom:0.5rem;">Please select the date and time in IST (Indian Standard Time).</div>
+                <div id="ist-confirm" style="font-size:1em;color:#00796b;margin-bottom:1rem;"></div>
+                <input type="submit" value="Update Time">
+            </form>
+        </div>
+    </main>
+    <script>
+    function toggleMenu() {
+      var menu = document.getElementById('menu');
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    }
+    // Show selected value as confirmation (no conversion, just show input value as IST)
+    var dateInput = document.getElementById('new_date');
+    var istConfirm = document.getElementById('ist-confirm');
+    function showIST() {
+      if (!dateInput.value) { istConfirm.innerText = ''; return; }
+      // Format as YYYY-MM-DD HH:MM IST from input value
+      var val = dateInput.value;
+      if (val.length === 16) {
+        var datePart = val.substring(0,10);
+        var timePart = val.substring(11,16);
+        istConfirm.innerText = 'You selected: ' + datePart + ' ' + timePart + ' IST';
+      } else {
+        istConfirm.innerText = 'You selected: ' + val + ' IST';
+      }
+    }
+    dateInput && dateInput.addEventListener('input', showIST);
+    showIST();
+    </script>
+</body>
+</html> 

@@ -1,0 +1,149 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html>
+<head>
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+    body {
+        background: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+        min-height: 100vh;
+        margin: 0;
+        font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    .auth-container {
+        max-width: 370px;
+        margin: 4rem auto;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 32px rgba(0,0,0,0.10);
+        padding: 2.5rem 2rem 2rem 2rem;
+        text-align: center;
+    }
+    .auth-container h2 {
+        margin-bottom: 1.5rem;
+        color: #f57c00;
+        font-size: 2rem;
+    }
+    .auth-container label {
+        display: block;
+        text-align: left;
+        margin-bottom: 0.3rem;
+        color: #444;
+        font-weight: 500;
+    }
+    .auth-container input[type="text"],
+    .auth-container input[type="email"],
+    .auth-container input[type="password"] {
+        width: 100%;
+        padding: 0.7rem;
+        margin-bottom: 1.1rem;
+        border: 1px solid #ffd180;
+        border-radius: 6px;
+        font-size: 1rem;
+        background: #fffbe6;
+        transition: border 0.2s;
+    }
+    .auth-container input[type="text"]:focus,
+    .auth-container input[type="email"]:focus,
+    .auth-container input[type="password"]:focus {
+        border: 1.5px solid #f57c00;
+        outline: none;
+    }
+    .auth-container input[type="submit"], .auth-container button {
+        width: 100%;
+        background: #f57c00;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 0.8rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 0.5rem;
+        transition: background 0.2s;
+    }
+    .auth-container input[type="submit"]:hover, .auth-container button:hover {
+        background: #ff9800;
+    }
+    .auth-container p {
+        margin-top: 1.2rem;
+        color: #555;
+    }
+    .auth-container a {
+        color: #f57c00;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .auth-container a:hover {
+        text-decoration: underline;
+    }
+    @media (max-width: 500px) {
+        .auth-container {
+            margin: 2rem 1rem;
+            padding: 1.5rem 0.7rem;
+        }
+    }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <h2>Sign Up</h2>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        <form method="post">
+            <label for="name">Full Name:</label>
+            <input type="text" id="name" name="name" required>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            <input type="submit" value="Sign Up">
+        </form>
+        <p>Already have an account? <a href="{{ url_for('login') }}">Login</a></p>
+    </div>
+</body>
+</html>
