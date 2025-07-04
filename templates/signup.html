@@ -127,13 +127,13 @@
 <body>
     <div class="auth-container">
         <h2>Sign Up</h2>
-        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
-            {% for category, message in messages %}
+                {% for category, message in messages %}
               <div class="flash flash-{{ category }}">{{ message }}</div>
-            {% endfor %}
+                {% endfor %}
           {% endif %}
-        {% endwith %}
+            {% endwith %}
         <form method="post">
             <label for="name">Full Name:</label>
             <input type="text" id="name" name="name" required>
@@ -142,8 +142,8 @@
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" required>
             <input type="submit" value="Sign Up">
-        </form>
-        <p>Already have an account? <a href="{{ url_for('login') }}">Login</a></p>
-    </div>
+            </form>
+            <p>Already have an account? <a href="{{ url_for('login') }}">Login</a></p>
+        </div>
 </body>
 </html>

@@ -32,6 +32,15 @@
                 <input type="text" id="name" name="name" value="{{ user.name if user.name else '' }}" required>
                 <label for="dob">Date of Birth</label>
                 <input type="date" id="dob" name="dob" value="{{ user.dob if user.dob else '' }}">
+                <label for="timezone">Timezone</label>
+                <select id="timezone" name="timezone">
+                  <option value="IST" {% if user.timezone == 'IST' or not user.timezone %}selected{% endif %}>IST (India Standard Time)</option>
+                  <option value="UTC" {% if user.timezone == 'UTC' %}selected{% endif %}>UTC (Coordinated Universal Time)</option>
+                  <option value="Asia/Kolkata" {% if user.timezone == 'Asia/Kolkata' %}selected{% endif %}>Asia/Kolkata</option>
+                  <option value="America/New_York" {% if user.timezone == 'America/New_York' %}selected{% endif %}>America/New_York</option>
+                  <option value="Europe/London" {% if user.timezone == 'Europe/London' %}selected{% endif %}>Europe/London</option>
+                  <!-- Add more as needed -->
+                </select>
                 <label for="password">New Password</label>
                 <input type="password" id="password" name="password" placeholder="Leave blank to keep current password">
                 <button type="submit" class="btn">Save Changes</button>

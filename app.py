@@ -103,7 +103,7 @@ def schedule(exam_id):
         return redirect(url_for('dashboard'))
     # 14-day cooldown check for both failed results and existing schedules
     user_id = ObjectId(session['user_id'])
-    now = datetime.datetime.utcnow().replace(tzinfo=None)
+    now = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
     # Check for failed result in last 14 days
     last_failed = results_collection.find_one({
         'user_id': user_id,
@@ -113,7 +113,11 @@ def schedule(exam_id):
     failed_date = None
     if last_failed:
         failed_date = last_failed.get('date') or last_failed.get('_id').generation_time
-        failed_date = failed_date.replace(tzinfo=None) if failed_date and failed_date.tzinfo else failed_date
+        # Ensure failed_date is always timezone-aware (IST)
+        if failed_date and failed_date.tzinfo is None:
+            failed_date = pytz.timezone('Asia/Kolkata').localize(failed_date)
+        elif failed_date and failed_date.tzinfo != pytz.timezone('Asia/Kolkata'):
+            failed_date = failed_date.astimezone(pytz.timezone('Asia/Kolkata'))
     # Check for any schedule in last 14 days (not just failed)
     recent_schedule = schedules_collection.find_one({
         'user_id': user_id,
@@ -140,13 +144,20 @@ def schedule(exam_id):
             if coupon:
                 amount_paid *= (1 - coupon['discount'] / 100)
                 coupon_applied = True
-        # Remove IST conversion, store as UTC
+        # Robust: treat input as local time, convert to IST
         naive_dt = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M')
-        utc_dt = naive_dt.replace(tzinfo=pytz.utc)
+        user = users_collection.find_one({'_id': user_id})
+        user_tz_str = user.get('timezone', 'Asia/Kolkata')
+        try:
+            user_tz = pytz.timezone(user_tz_str)
+        except Exception:
+            user_tz = pytz.timezone('Asia/Kolkata')
+        local_dt = user_tz.localize(naive_dt)
+        ist_dt = local_dt.astimezone(pytz.timezone('Asia/Kolkata'))
         schedule_id = schedules_collection.insert_one({
             'user_id': user_id,
             'exam_id': ObjectId(exam_id),
-            'date': utc_dt,
+            'date': ist_dt,
             'coupon_applied': coupon_applied,
             'amount_paid': amount_paid,
             'confirmed': True,
@@ -156,7 +167,7 @@ def schedule(exam_id):
         user = users_collection.find_one({'_id': user_id})
         user_name = user.get('name', user.get('email', 'Student'))
         exam_url = url_for('exam', schedule_id=schedule_id, _external=True)
-        date_display = utc_dt.strftime('%Y-%m-%d %H:%M')
+        date_display = ist_dt.strftime('%Y-%m-%d %H:%M')
         msg = Message('Exam Scheduled', sender=app.config['MAIL_USERNAME'], recipients=[session['email']])
         msg.body = f"Hello {user_name},\nYour exam '{exam['title']}' is scheduled for {date_display}. Amount paid: ₹{amount_paid:.2f}.\nExam link: {exam_url}\nYou can access the exam at the scheduled time from your dashboard or using the link above."
         msg.html = render_template('email_exam_scheduled.html', name=user_name, exam_title=exam['title'], date_display=date_display, amount_paid=f"{amount_paid:.2f}", exam_url=exam_url)
@@ -193,21 +204,21 @@ def exam(schedule_id):
         'passed': False
     }, sort=[('_id', -1)])
     if last_failed:
-        last_failed_date = last_failed.get('date') or last_failed.get('_id').generation_time
-        now = datetime.datetime.utcnow().replace(tzinfo=None)
-        failed_date = last_failed_date.replace(tzinfo=None) if last_failed_date.tzinfo else last_failed_date
+        failed_date = last_failed.get('date') or last_failed.get('_id').generation_time
+        if failed_date and failed_date.tzinfo is None:
+            failed_date = pytz.timezone('Asia/Kolkata').localize(failed_date)
+        else:
+            failed_date = failed_date.astimezone(pytz.timezone('Asia/Kolkata'))
+        now = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
         if (now - failed_date).days < 14:
             days_left = 14 - (now - failed_date).days
             flash(f'You must wait {days_left} more day(s) before retaking this exam.', 'error')
             return redirect(url_for('dashboard'))
     # Check if current time is before scheduled time
-    now_utc = datetime.datetime.now(pytz.utc)
-    scheduled_time_utc = schedule['date']
-    now_display = now_utc
-    scheduled_time_display = scheduled_time_utc
-    # Ensure scheduled_time_display is always aware (UTC)
-    if scheduled_time_display.tzinfo is None:
-        scheduled_time_display = scheduled_time_display.replace(tzinfo=pytz.utc)
+    now_ist = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
+    scheduled_time_ist = schedule['date'].astimezone(pytz.timezone('Asia/Kolkata')) if schedule['date'].tzinfo else pytz.timezone('Asia/Kolkata').localize(schedule['date'])
+    now_display = now_ist
+    scheduled_time_display = scheduled_time_ist
     show_questions = now_display >= scheduled_time_display
     questions = list(questions_collection.find({'exam_id': schedule['exam_id']})) if show_questions else []
     return render_template('exam.html', schedule_id=schedule_id, questions=questions, scheduled_time=scheduled_time_display, now=now_display, show_questions=show_questions)
@@ -238,7 +249,7 @@ def submit_exam(schedule_id):
         'total': total,
         'percentage': percentage,
         'passed': passed,
-        'date': datetime.datetime.utcnow(),
+        'date': datetime.datetime.now(pytz.timezone('Asia/Kolkata')),
         'user_name': certificate_name
     })
     return redirect(url_for('survey', schedule_id=schedule_id))
@@ -247,8 +258,7 @@ def submit_exam(schedule_id):
 @login_required
 def survey(schedule_id):
     if request.method == 'POST':
-        # You can save survey responses here if needed
-        return redirect(url_for('result', schedule_id=schedule_id))
+       return redirect(url_for('result', schedule_id=schedule_id))
     return render_template('survey.html', schedule_id=schedule_id)
 
 def generate_certificate_pdf(name, course, date, code, verify_url, signature_image_path='C:\\Users\\chvkr\\Downloads\\COI\\sign.png'):
@@ -476,7 +486,10 @@ def result(schedule_id):
         return redirect(url_for('dashboard'))
     exam = exams_collection.find_one({'_id': result['exam_id']})
     user_name = result.get('user_name', session.get('email', 'Student'))
-    date_display = result['date'].strftime('%Y-%m-%d %H:%M') if 'date' in result else ''
+    if result.get('date'):
+        date_display = result['date'].astimezone(pytz.timezone('Asia/Kolkata')).strftime('%Y-%m-%d %H:%M') if result['date'].tzinfo else pytz.timezone('Asia/Kolkata').localize(result['date']).strftime('%Y-%m-%d %H:%M')
+    else:
+        date_display = ''
     if result['passed']:
         # Generate unique code
         cert_code = str(uuid.uuid4())[:8]
@@ -502,7 +515,7 @@ def result(schedule_id):
         msg.html = render_template('email_result_fail.html', name=user_name, course=exam['title'], score=result['percentage'], date=date_display, resources_url=resources_url)
         msg.attach(f"Exam_Report_{schedule_id}.pdf", 'application/pdf', pdf_buffer.read())
         mail.send(msg)
-    return render_template('result.html', result=result, exam=exam, date_display=date_display)
+    return render_template('result.html', exam=exam, result=result, date_display=date_display)
 
 @app.route('/verify/<code>')
 def verify_certificate(code):
@@ -572,7 +585,10 @@ def certificate(schedule_id):
         flash('Certificate not available.', 'error')
         return redirect(url_for('dashboard'))
     exam = exams_collection.find_one({'_id': result['exam_id']})
-    date_display = result['date'].strftime('%Y-%m-%d %H:%M') if 'date' in result else ''
+    if result.get('date'):
+        date_display = result['date'].astimezone(pytz.timezone('Asia/Kolkata')).strftime('%Y-%m-%d %H:%M') if result['date'].tzinfo else pytz.timezone('Asia/Kolkata').localize(result['date']).strftime('%Y-%m-%d %H:%M')
+    else:
+        date_display = ''
     return render_template('certificate.html', exam=exam, result=result, date_display=date_display)
 
 @app.route('/logout')
@@ -585,7 +601,7 @@ def logout():
 @app.route('/upcoming_exams')
 @login_required
 def upcoming_exams():
-    now_utc = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+    now_utc = datetime.datetime.now(pytz.timezone('Asia/Kolkata'))
     user_id = ObjectId(session['user_id'])
     upcoming = list(schedules_collection.find({
         'user_id': user_id,
@@ -596,7 +612,11 @@ def upcoming_exams():
         s['exam'] = exams_collection.find_one({'_id': s['exam_id']})
         # Find results for this user and exam
         s['exam_results'] = list(results_collection.find({'user_id': user_id, 'exam_id': s['exam_id']}))
-        s['date_display'] = s['date'].strftime('%Y-%m-%d %H:%M') if s.get('date') else None
+        if s.get('date'):
+            date_ist = s['date'].astimezone(pytz.timezone('Asia/Kolkata')) if s['date'].tzinfo else pytz.timezone('Asia/Kolkata').localize(s['date'])
+            s['date_display'] = date_ist.strftime('%Y-%m-%d %H:%M')
+        else:
+            s['date_display'] = None
     return render_template('upcoming_exams.html', schedules=upcoming, now=now_utc)
 
 @app.route('/certificates')
@@ -643,8 +663,15 @@ def change_exam_time(schedule_id):
     if request.method == 'POST':
         new_date = request.form['new_date']
         naive_dt = datetime.datetime.strptime(new_date, '%Y-%m-%dT%H:%M')
-        utc_dt = naive_dt.replace(tzinfo=pytz.utc)
-        schedules_collection.update_one({'_id': ObjectId(schedule_id)}, {'$set': {'date': utc_dt, 'time_changed': True}})
+        user = users_collection.find_one({'_id': ObjectId(session['user_id'])})
+        user_tz_str = user.get('timezone', 'Asia/Kolkata')
+        try:
+            user_tz = pytz.timezone(user_tz_str)
+        except Exception:
+            user_tz = pytz.timezone('Asia/Kolkata')
+        local_dt = user_tz.localize(naive_dt)
+        ist_dt = local_dt.astimezone(pytz.timezone('Asia/Kolkata'))
+        schedules_collection.update_one({'_id': ObjectId(schedule_id)}, {'$set': {'date': ist_dt, 'time_changed': True}})
         flash('Exam time changed successfully.', 'success')
         return redirect(url_for('upcoming_exams'))
     schedule['date_display'] = schedule['date'].strftime('%Y-%m-%d %H:%M') if schedule.get('date') else None
@@ -787,6 +814,7 @@ def edit_profile():
         name = request.form.get('name', '').strip()
         dob = request.form.get('dob', '').strip()
         password = request.form.get('password', '').strip()
+        timezone = request.form.get('timezone', '').strip()
         update_fields = {}
         if name:
             update_fields['name'] = name
@@ -795,6 +823,8 @@ def edit_profile():
         if password:
             hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
             update_fields['password'] = hashed_password
+        if timezone:
+            update_fields['timezone'] = timezone
         if update_fields:
             users_collection.update_one({'_id': ObjectId(session['user_id'])}, {'$set': update_fields})
             flash('Profile updated successfully.', 'success')
