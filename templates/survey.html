@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Exam Feedback Survey</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+    .survey-card { max-width: 480px; margin: 3rem auto; background: #fff; border-radius: 14px; box-shadow: 0 4px 24px #e0e0e0; padding: 2.5rem 2rem; }
+    .survey-card h2 { color: #1976d2; margin-bottom: 1.2rem; text-align: center; }
+    .survey-card label { font-weight: 500; color: #333; margin-bottom: 0.5rem; display: block; }
+    .survey-card textarea { width: 100%; border-radius: 6px; border: 1px solid #ccc; padding: 0.7rem; min-height: 60px; margin-bottom: 1.2rem; }
+    .survey-card .btn { width: 100%; background: #1976d2; color: #fff; border: none; border-radius: 6px; padding: 0.9rem; font-size: 1.1rem; font-weight: 600; cursor: pointer; margin-top: 1.2rem; transition: background 0.2s; }
+    .survey-card .btn:hover { background: #0056b3; }
+    .survey-card .rating { display: flex; gap: 0.7rem; margin-bottom: 1.2rem; }
+    .survey-card .rating label { font-weight: 400; color: #555; margin-bottom: 0; }
+    </style>
+</head>
+<body>
+    <div class="survey-card">
+        <h2>Exam Feedback Survey</h2>
+        <form method="POST">
+            <label>How would you rate your exam experience?</label>
+            <div class="rating">
+                <label><input type="radio" name="rating" value="1" required> 1</label>
+                <label><input type="radio" name="rating" value="2"> 2</label>
+                <label><input type="radio" name="rating" value="3"> 3</label>
+                <label><input type="radio" name="rating" value="4"> 4</label>
+                <label><input type="radio" name="rating" value="5"> 5 (Excellent)</label>
+            </div>
+            <label for="comments">Any comments or suggestions?</label>
+            <textarea id="comments" name="comments" placeholder="Your feedback helps us improve!"></textarea>
+            <button type="submit" class="btn">Submit Feedback & View Result</button>
+        </form>
+    </div>
+</body>
+</html> 

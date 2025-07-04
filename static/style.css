@@ -170,3 +170,195 @@ input[type="submit"]:hover, input[type="button"]:hover {
     color: #c00;
     border: 1px solid #f5b7b7;
 }
+
+/* --- Edit Profile Card & Form Improvements --- */
+.card {
+    background: #f8fafc;
+    border-radius: 12px;
+    box-shadow: 0 6px 32px #e0e7ef;
+    padding: 2.5rem 2rem 2rem 2rem;
+    margin: 2.5rem auto;
+    max-width: 420px;
+    border: 1px solid #e0e0e0;
+    transition: box-shadow 0.2s;
+}
+.card:hover {
+    box-shadow: 0 10px 40px #dbeafe;
+}
+.card h2 {
+    margin-bottom: 1.5rem;
+    color: #1976d2;
+    letter-spacing: 1px;
+}
+.card form label {
+    font-weight: 500;
+    color: #475569;
+    margin-bottom: 0.3rem;
+    margin-top: 0.5rem;
+}
+.card form input[type="text"],
+.card form input[type="date"],
+.card form input[type="password"] {
+    background: #fff;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 0.8rem 1.1rem;
+    font-size: 1.08rem;
+    margin-bottom: 0.2rem;
+    transition: border 0.2s, box-shadow 0.2s;
+    box-shadow: 0 1px 4px #f1f5f9;
+}
+.card form input:focus {
+    border: 1.5px solid #1976d2;
+    outline: none;
+    box-shadow: 0 2px 8px #e3eafe;
+}
+.card form button.btn {
+    background: linear-gradient(90deg, #1976d2 60%, #43a047 100%);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.7rem 1.6rem;
+    font-size: 1.08rem;
+    font-weight: 600;
+    margin-top: 1.2rem;
+    box-shadow: 0 2px 8px #e0e0e0;
+    transition: background 0.2s, box-shadow 0.2s;
+}
+.card form button.btn:hover {
+    background: linear-gradient(90deg, #0056b3 60%, #388e3c 100%);
+    box-shadow: 0 4px 16px #c7e0ff;
+}
+.btn-secondary {
+    background: #e0e7ef;
+    color: #1976d2;
+    border: 1.5px solid #b6c6e3;
+    font-weight: 500;
+    box-shadow: none;
+    margin-top: 1.2rem;
+    transition: background 0.2s, color 0.2s;
+}
+.btn-secondary:hover {
+    background: #c7d2fe;
+    color: #174ea6;
+    border-color: #a5b4fc;
+}
+
+/* --- Profile Avatar & Birthday Styles --- */
+.profile-avatar-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+.profile-avatar {
+    width: 90px;
+    height: 90px;
+    background: linear-gradient(135deg, #1976d2 60%, #43a047 100%);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    box-shadow: 0 4px 16px #e0e7ef;
+    position: relative;
+    margin-bottom: 0.5rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+.profile-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.birthday-hat {
+    position: absolute;
+    top: -18px;
+    right: -12px;
+    font-size: 2rem;
+    filter: drop-shadow(0 2px 4px #ffd700);
+    animation: bounce 1.2s infinite alternate;
+}
+@keyframes bounce {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-8px); }
+}
+.birthday-msg {
+    color: #ff9800;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+    text-align: center;
+    letter-spacing: 0.5px;
+    animation: fadeIn 1.2s;
+}
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* --- Certificates Table Styles --- */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+}
+.cert-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px #e0e7ef;
+    overflow: hidden;
+    min-width: 600px;
+}
+.cert-table th, .cert-table td {
+    padding: 1rem 1.2rem;
+    text-align: left;
+}
+.cert-table th {
+    background: #f5f7fa;
+    color: #1976d2;
+    font-weight: 600;
+    border-bottom: 2px solid #e0e0e0;
+    letter-spacing: 0.5px;
+}
+.cert-table tr {
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.2s;
+}
+.cert-table tr:hover {
+    background: #f0f7ff;
+}
+.cert-table td {
+    color: #333;
+    font-size: 1.04rem;
+}
+.btn-sm {
+    padding: 0.35rem 0.9rem;
+    font-size: 0.98rem;
+    border-radius: 4px;
+    margin-right: 0.3rem;
+    margin-bottom: 0.2rem;
+    background: #1976d2;
+    color: #fff;
+    border: none;
+    font-weight: 500;
+    transition: background 0.2s;
+    text-decoration: none;
+    display: inline-block;
+}
+.btn-sm:hover {
+    background: #0056b3;
+    color: #ffd700;
+}
+.empty-msg {
+    text-align: center;
+    color: #888;
+    font-size: 1.1rem;
+    margin: 2.5rem 0;
+}

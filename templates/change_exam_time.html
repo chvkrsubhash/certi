@@ -28,7 +28,7 @@
         <div class="exam-item">
             <h2>Change Exam Time</h2>
             <p><strong>Exam:</strong> {{ schedule.exam_id }}</p>
-            <p><strong>Current Date & Time:</strong> {{ schedule.date_ist.strftime('%Y-%m-%d %H:%M') }} IST</p>
+            <p><strong>Current Date & Time:</strong> {{ schedule.date_display }} IST</p>
             <form method="post">
                 <label for="new_date">Select New Date & Time (IST):</label>
                 <input type="datetime-local" id="new_date" name="new_date" required>

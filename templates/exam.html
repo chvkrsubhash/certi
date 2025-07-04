@@ -1,47 +1,35 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
     <title>Take Exam</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}"> -->
+    <style>
+    .moodle-quiz-container { display: flex; flex-direction: column; align-items: center; }
+    .moodle-quiz-main { width: 100%; max-width: 600px; }
+    .moodle-quiz-question-card { background: #fff; border-radius: 10px; box-shadow: 0 2px 12px #e0e7ef; padding: 2rem 1.5rem; margin-bottom: 2rem; }
+    .moodle-quiz-question-title { font-size: 1.15rem; font-weight: 600; color: #2d3e50; margin-bottom: 1.1rem; }
+    .moodle-quiz-options label { display: block; background: #f8fafc; border-radius: 6px; padding: 0.7rem 1rem; margin-bottom: 0.7rem; border: 1.5px solid #e0e0e0; cursor: pointer; transition: border 0.2s, background 0.2s; font-size: 1.04rem; }
+    .moodle-quiz-options input[type="radio"] { margin-right: 0.8rem; }
+    .moodle-quiz-options label:hover, .moodle-quiz-options input[type="radio"]:focus + label { border: 1.5px solid #1976d2; background: #e3eafe; }
+    .moodle-quiz-submit-btn { width: 100%; background: linear-gradient(90deg, #1976d2 60%, #43a047 100%); color: #fff; border: none; border-radius: 6px; padding: 1rem; font-size: 1.15rem; font-weight: 600; margin-top: 1.5rem; box-shadow: 0 2px 8px #e0e0e0; transition: background 0.2s; }
+    .moodle-quiz-submit-btn:disabled { background: #bdbdbd; color: #fff; cursor: not-allowed; }
+    .moodle-quiz-submit-btn:hover:enabled { background: linear-gradient(90deg, #0056b3 60%, #388e3c 100%); }
+    .moodle-quiz-timer { position: sticky; top: 0; background: #fffbe6; color: #d84315; font-weight: 600; font-size: 1.15rem; border-radius: 6px; padding: 0.7rem 1.2rem; margin-bottom: 1.5rem; box-shadow: 0 2px 8px #ffe0b2; z-index: 10; text-align: center; }
+    .moodle-quiz-qpanel { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-bottom: 1.5rem; }
+    .moodle-quiz-qpanel-btn { width: 38px; height: 38px; padding: 0; border-radius: 50%; font-size: 1.08rem; font-weight: 600; background: #e0e7ef; color: #1976d2; border: 2px solid #e0e0e0; margin: 0; box-shadow: none; transition: background 0.2s, color 0.2s, border 0.2s; }
+    .moodle-quiz-qpanel-btn.active, .moodle-quiz-qpanel-btn:focus { background: #1976d2; color: #fff; border-color: #1976d2; }
+    .exam-rules-modal {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(44,62,80,0.85); z-index: 1000; display: flex; align-items: center; justify-content: center;
+    }
+    .exam-rules-card {
+        background: #fff; border-radius: 12px; box-shadow: 0 8px 32px #2d3e50cc; padding: 2.5rem 2rem; max-width: 420px; width: 95vw; text-align: left; position: relative;
+    }
+    .exam-rules-card h2 { color: #1976d2; margin-top: 0; margin-bottom: 1.2rem; }
+    .exam-rules-card ul { color: #444; font-size: 1.05rem; margin-bottom: 1.5rem; padding-left: 1.2rem; }
+    .exam-rules-card li { margin-bottom: 0.7rem; }
+    .exam-rules-card button { width: 100%; background: #1976d2; color: #fff; border: none; border-radius: 6px; padding: 0.9rem; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .exam-rules-card button:hover { background: #0056b3; }
+    </style>
 </head>
 <body>
     <!--<header>
@@ -59,89 +47,147 @@
         </nav>
     </header>-->
     <main>
-        <div class="card">
-            <h2>Exam</h2>
+        <div class="card" style="padding:0;box-shadow:none;background:none;">
             {% if not show_questions %}
                 <div id="timer" style="font-size:1.3rem;margin-bottom:1.5rem;"></div>
                 <div class="flash flash-error">The exam will be available at {{ scheduled_time.strftime('%Y-%m-%d %H:%M') }} IST. Please wait for the timer to reach zero.</div>
                 <script>
-                // Simple countdown timer using backend-passed IST time (no conversion)
-                var scheduledTime = new Date("{{ scheduled_time.strftime('%Y-%m-%dT%H:%M:%S') }}");
+                var scheduledTime = new Date("{{ scheduled_time.strftime('%Y-%m-%dT%H:%M:%S') }}Z");
                 var timerDiv = document.getElementById('timer');
                 function updateTimer() {
                   var current = new Date();
-                  var distance = scheduledTime - current;
-                  if (distance < 0) {
-                    timerDiv.innerHTML = 'Exam is now available. Please refresh the page.';
+                  var distance = scheduledTime.getTime() - current.getTime();
+                  if (distance <= 0) {
+                    timerDiv.innerHTML = 'Exam is now available. Loading...';
+                    setTimeout(function() { location.reload(); }, 1500);
                     return;
                   }
                   var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                   var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                   var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-                  timerDiv.innerHTML = 'Time until exam: ' + (hours > 0 ? hours + ':' : '') + (minutes < 10 ? '0' : '') + minutes + ':' + (seconds < 10 ? '0' : '') + seconds + ' (IST)';
+                  timerDiv.innerHTML = 'Time until exam: ' + (hours > 0 ? hours + ':' : '') + (minutes < 10 ? '0' : '') + minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
                   setTimeout(updateTimer, 1000);
                 }
                 updateTimer();
                 </script>
             {% else %}
-                <div id="timer">Time Left: 60:00</div>
-                <form method="POST" action="{{ url_for('submit_exam', schedule_id=schedule_id) }}" id="examForm">
+            <div id="examRulesModal" class="exam-rules-modal">
+                <div class="exam-rules-card">
+                    <h2>Exam Rules & Regulations</h2>
+                    <ul>
+                        <li>Be ready at least 10 minutes before your scheduled time.</li>
+                        <li>Have a stable internet connection throughout the exam.</li>
+                        <li>Keep your ID proof handy for verification if required.</li>
+                        <li>Do not refresh or close the exam window during the test.</li>
+                        <li>Each question is mandatory and must be answered in sequence.</li>
+                        <li>Once submitted, answers cannot be changed.</li>
+                        <li>Any suspicious activity may result in disqualification.</li>
+                        <li>Contact support if you face any technical issues.</li>
+                    </ul>
+                    <button id="agreeBtn">I Agree & Start Exam</button>
+                </div>
+            </div>
+            <div id="examContent" style="display:none;">
+                <div class="moodle-quiz-timer" id="timer">Time Left: 60:00</div>
+                <div class="moodle-quiz-qpanel" id="qpanel">
                     {% for question in questions %}
-                        <div class="question">
-                            <p>{{ question.question }}</p>
-                            {% for option in question.options %}
-                                <label><input type="radio" name="{{ question._id }}" value="{{ option }}" required> {{ option }}</label><br>
-                            {% endfor %}
-                        </div>
+                    <button type="button" class="moodle-quiz-qpanel-btn" id="qpanel-btn-{{ loop.index0 }}">{{ loop.index }}</button>
                     {% endfor %}
-                    <button type="submit">Submit Exam</button>
-                </form>
-                <div id="warn" style="color:#b00;font-weight:bold;margin-top:1rem;"></div>
-                <script>
-                // Tab shift and fullscreen tracking
-                var tabShiftCount = 0;
-                var fullscreenExitCount = 0;
-                var maxAllowed = 5;
-                var form = document.getElementById('examForm');
-                var warnDiv = document.getElementById('warn');
-                // Tab shift
-                document.addEventListener('visibilitychange', function() {
-                  if (document.hidden) {
+                </div>
+                <div class="moodle-quiz-container">
+                    <div class="moodle-quiz-main">
+                        <form method="POST" action="{{ url_for('submit_exam', schedule_id=schedule_id) }}" id="examForm">
+                            {% for question in questions %}
+                            <div class="moodle-quiz-question-card" id="question-{{ loop.index0 }}">
+                                <div class="moodle-quiz-question-title">Q{{ loop.index }}. {{ question.question }}</div>
+                                <div class="moodle-quiz-options">
+                                    {% for option in question.options %}
+                                    <label><input type="radio" name="{{ question._id }}" value="{{ option }}" required> {{ option }}</label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                            <button type="submit" class="moodle-quiz-submit-btn" id="submitBtn">Submit Exam</button>
+                        </form>
+                        <div id="warn" style="color:#b00;font-weight:bold;margin-top:1rem;"></div>
+                    </div>
+                </div>
+            </div>
+            <script>
+            // Question panel navigation
+            var total = {{ questions|length }};
+            var cards = [];
+            for (var i = 0; i < total; i++) {
+                cards.push(document.getElementById('question-' + i));
+            }
+            var qpanelBtns = [];
+            for (var i = 0; i < total; i++) {
+                qpanelBtns.push(document.getElementById('qpanel-btn-' + i));
+                qpanelBtns[i].onclick = (function(idx) { return function() {
+                    cards[idx].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    qpanelBtns.forEach((btn, j) => btn.classList.toggle('active', j === idx));
+                }; })(i);
+            }
+            // Highlight active question on scroll
+            window.addEventListener('scroll', function() {
+                var scrollPos = window.scrollY || window.pageYOffset;
+                var found = false;
+                for (var i = 0; i < cards.length; i++) {
+                    var rect = cards[i].getBoundingClientRect();
+                    if (!found && rect.top >= 0 && rect.top < window.innerHeight/2) {
+                        qpanelBtns.forEach((btn, j) => btn.classList.toggle('active', j === i));
+                        found = true;
+                    }
+                }
+            });
+            // Disable submit after first click
+            document.getElementById('examForm').onsubmit = function() {
+                var btn = document.getElementById('submitBtn');
+                btn.disabled = true;
+                btn.innerText = 'Submitting...';
+            };
+            // Timer
+            var timerDiv = document.getElementById('timer');
+            var timeLeft = 60 * 60; // 60 minutes
+            function updateExamTimer() {
+                var min = Math.floor(timeLeft / 60);
+                var sec = timeLeft % 60;
+                timerDiv.innerHTML = 'Time Left: ' + (min < 10 ? '0' : '') + min + ':' + (sec < 10 ? '0' : '') + sec;
+                if (timeLeft <= 0) {
+                    timerDiv.innerHTML = 'Time is up! Submitting...';
+                    var btn = document.getElementById('submitBtn');
+                    btn.disabled = true;
+                    btn.innerText = 'Submitting...';
+                    document.getElementById('examForm').submit();
+                } else {
+                    timeLeft--;
+                    setTimeout(updateExamTimer, 1000);
+                }
+            }
+            // Rules modal logic and timer start
+            document.getElementById('agreeBtn').onclick = function() {
+                document.getElementById('examRulesModal').style.display = 'none';
+                document.getElementById('examContent').style.display = '';
+                updateExamTimer();
+            };
+            // Tab shift
+            var tabShiftCount = 0;
+            var maxAllowed = 5;
+            var warnDiv = document.getElementById('warn');
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
                     tabShiftCount++;
                     warnDiv.innerText = 'Tab/Window switched ' + tabShiftCount + ' times.';
                     if (tabShiftCount >= maxAllowed) {
-                      warnDiv.innerText = 'Tab/Window switched too many times. Exam will be auto-submitted.';
-                      setTimeout(function(){ form.submit(); }, 1000);
+                        warnDiv.innerText = 'Tab/Window switched too many times. Exam will be auto-submitted.';
+                        var btn = document.getElementById('submitBtn');
+                        btn.disabled = true;
+                        btn.innerText = 'Submitting...';
+                        setTimeout(function(){ document.getElementById('examForm').submit(); }, 1000);
                     }
-                  }
-                });
-                // Fullscreen
-                function isFullScreen() {
-                  return document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
                 }
-                function fullscreenListener() {
-                  if (!isFullScreen()) {
-                    fullscreenExitCount++;
-                    warnDiv.innerText = 'Fullscreen exited ' + fullscreenExitCount + ' times.';
-                    if (fullscreenExitCount >= maxAllowed) {
-                      warnDiv.innerText = 'Fullscreen exited too many times. Exam will be auto-submitted.';
-                      setTimeout(function(){ form.submit(); }, 1000);
-                    }
-                  }
-                }
-                document.addEventListener('fullscreenchange', fullscreenListener);
-                document.addEventListener('webkitfullscreenchange', fullscreenListener);
-                document.addEventListener('mozfullscreenchange', fullscreenListener);
-                document.addEventListener('MSFullscreenChange', fullscreenListener);
-                // Force fullscreen on load
-                window.onload = function() {
-                  var el = document.documentElement;
-                  if (el.requestFullscreen) el.requestFullscreen();
-                  else if (el.mozRequestFullScreen) el.mozRequestFullScreen();
-                  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-                  else if (el.msRequestFullscreen) el.msRequestFullscreen();
-                };
-                </script>
+            });
+            </script>
             {% endif %}
         </div>
     </main>

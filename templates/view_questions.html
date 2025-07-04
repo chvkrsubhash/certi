@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>View Questions</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+    body { background: #f7f8fa; font-family: 'Segoe UI', Arial, sans-serif; }
+    .card { max-width: 700px; margin: 2.5rem auto; background: #fff; border-radius: 16px; box-shadow: 0 4px 24px #e0e0e0; padding: 2.5rem 2rem; }
+    h2 { color: #2d3a4b; margin-bottom: 1.5rem; text-align: center; }
+    .question-list { margin-top: 2rem; }
+    .question-block { margin-bottom: 2rem; border: 1.5px solid #e0e0e0; background: #f6faff; padding: 1.2rem 1rem 0.7rem 1rem; border-radius: 10px; box-shadow: 0 2px 8px #e0e0e0; }
+    .question-title { font-weight: 600; color: #2d3a4b; margin-bottom: 0.7rem; }
+    .options-list { margin-left: 1.2rem; margin-bottom: 0.5rem; }
+    .correct { color: #27ae60; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <main>
+        <div class="card">
+            <h2>Questions for: {{ exam.title }}</h2>
+            <div class="question-list">
+                {% for q in questions %}
+                <div class="question-block">
+                    <div class="question-title">Q{{ loop.index }}: {{ q.question }}</div>
+                    <div class="options-list">
+                        {% for opt in q.options %}
+                            <div>{% if opt == q.correct_answer %}<span class="correct">&#10003; {{ opt }}</span>{% else %}{{ opt }}{% endif %}</div>
+                        {% endfor %}
+                    </div>
+                    <div style="font-size:0.98rem;color:#888;">Correct Answer: <span class="correct">{{ q.correct_answer }}</span></div>
+                </div>
+                {% else %}
+                <div style="text-align:center;">No questions found for this exam.</div>
+                {% endfor %}
+            </div>
+            <a href="{{ url_for('manage_exams') }}" class="crud-btn" style="background:#2d7ff9;color:#fff;">Back to Exams</a>
+        </div>
+    </main>
+</body>
+</html> 

@@ -59,7 +59,7 @@
             {% for s in schedules %}
                 <tr>
                     <td>{{ s.exam.title }}</td>
-                    <td>{{ s.date_ist.strftime('%Y-%m-%d %H:%M') }} IST</td>
+                    <td>{{ s.date_display }}</td>
                     <td>
                         {% set completed = false %}
                         {% for r in s.exam_results if r.schedule_id == s._id %}
@@ -68,20 +68,21 @@
                         {% if completed %}
                             <button disabled>Completed</button>
                         {% else %}
-                                <button {% if s.date_ist > now %}disabled title="Exam will be available at {{ s.date_ist.strftime('%Y-%m-%d %H:%M') }} IST"{% endif %}>
+                                <button {% if s.date_display > now.strftime('%Y-%m-%d %H:%M') %}disabled title="Exam will be available at {{ s.date_display }} IST"{% endif %}>
                                   <a href="{{ url_for('exam', schedule_id=s._id) }}">
                                     Give Test
                                   </a>
                                 </button>
-                            {% if s.date_ist > now %}
-                                <span style="color:gray; font-size:0.95em;">Exam will be available at {{ s.date_ist.strftime('%Y-%m-%d %H:%M') }} IST</span>
-                            {% endif %}
-                            <br>
+
                             {% if not s.time_changed %}
                                 <a href="{{ url_for('change_exam_time', schedule_id=s._id) }}"><button>Change Time</button></a>
                             {% else %}
                                 <button disabled>Time Changed</button>
                             {% endif %}
+                            <br>
+                            {% if s.date_display > now.strftime('%Y-%m-%d %H:%M') %}
+                                <span style="color:gray; font-size:0.95em;">Exam will be available at {{ s.date_display }} IST</span>
+                            {% endif %}                            
                         {% endif %}
                     </td>
                 </tr>

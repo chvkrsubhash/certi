@@ -26,16 +26,40 @@
           {% endif %}
         {% endwith %}
         <h2>Certificates</h2>
-        <ul>
-          {% for c in certificates %}
-            <li>
-              <strong>{{ c.exam.title }}</strong> - {{ c.percentage|round(2) }}%<br>
-              <a href="{{ url_for('certificate', schedule_id=c.schedule_id) }}">View Certificate</a>
-            </li>
-          {% else %}
-            <li>No certificates yet.</li>
-          {% endfor %}
-        </ul>
+        {% if certificates %}
+        <div class="table-responsive">
+        <table class="cert-table">
+          <thead>
+            <tr>
+              <th>Course</th>
+              <th>Score</th>
+              <th>Date</th>
+              <th>Certificate Code</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in certificates %}
+            <tr>
+              <td>{{ c.exam.title }}</td>
+              <td>{{ c.percentage|round(2) }}%</td>
+              <td>{{ c.date_display if c.date_display else 'N/A' }}</td>
+              <td>{{ c.certificate_code if c.certificate_code else 'N/A' }}</td>
+              <td>
+                <a href="{{ url_for('certificate', schedule_id=c.schedule_id) }}" class="btn btn-sm">View</a>
+                <a href="{{ url_for('download_certificate_pdf', schedule_id=c.schedule_id) }}" class="btn btn-sm" title="Download PDF">&#128190;</a>
+                {% if c.certificate_code %}
+                  <a href="{{ url_for('verify_certificate', code=c.certificate_code) }}" class="btn btn-sm" title="Verify">&#128274;</a>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        </div>
+        {% else %}
+          <div class="empty-msg">No certificates yet.</div>
+        {% endif %}
     </main>
     <script>
     function toggleMenu() {

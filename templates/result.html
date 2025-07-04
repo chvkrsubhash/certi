@@ -68,7 +68,7 @@
             <h2>Exam Result: {{ exam.title }}</h2>
             <p><strong>Score:</strong> {{ result.score }} / {{ result.total }}</p>
             <p><strong>Percentage:</strong> {{ result.percentage|round(2) }}%</p>
-            <p><strong>Date (IST):</strong> {{ date_ist.strftime('%Y-%m-%d %H:%M') if date_ist else '' }}</p>
+            <p><strong>Date (IST):</strong> {{ date_display if date_display else '' }}</p>
             {% if result.passed %}
                 <p class="flash flash-success"><strong>Congratulations! You passed the exam.</strong></p>
                 <a href="{{ url_for('certificate', schedule_id=result.schedule_id) }}" class="btn">View Certificate</a>

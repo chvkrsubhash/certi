@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Exam</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+    body {
+        background: #f7f8fa;
+        font-family: 'Segoe UI', Arial, sans-serif;
+    }
+    .card {
+        max-width: 700px;
+        margin: 2.5rem auto;
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 24px #e0e0e0;
+        padding: 2.5rem 2rem;
+    }
+    h2 {
+        color: #2d3a4b;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+    label {
+        display: block;
+        margin-bottom: 0.7rem;
+        color: #333;
+        font-weight: 500;
+    }
+    input[type="text"], textarea {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        margin-top: 0.2rem;
+        margin-bottom: 1rem;
+        font-size: 1rem;
+        background: #f9f9f9;
+    }
+    textarea {
+        min-height: 60px;
+        resize: vertical;
+    }
+    .question-block {
+        margin-bottom: 2rem;
+        border: 1.5px solid #e0e0e0;
+        background: #f6faff;
+        padding: 1.2rem 1rem 0.7rem 1rem;
+        border-radius: 10px;
+        position: relative;
+        box-shadow: 0 2px 8px #e0e0e0;
+    }
+    .remove-btn {
+        color: #b00;
+        cursor: pointer;
+        margin-left: 1rem;
+        font-size: 0.98rem;
+        background: none;
+        border: none;
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.2rem 0.7rem;
+        border-radius: 4px;
+        transition: background 0.2s;
+    }
+    .remove-btn:hover {
+        background: #ffeaea;
+    }
+    button[type="button"], button[type="submit"] {
+        background: #2d7ff9;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 0.7rem 1.5rem;
+        font-size: 1.08rem;
+        font-weight: 500;
+        cursor: pointer;
+        margin-right: 1rem;
+        margin-top: 0.5rem;
+        transition: background 0.2s;
+        box-shadow: 0 2px 8px #e0e0e0;
+    }
+    button[type="button"]:hover, button[type="submit"]:hover {
+        background: #1a5fd0;
+    }
+    @media (max-width: 600px) {
+        .card {
+            padding: 1.2rem 0.5rem;
+        }
+        h2 {
+            font-size: 1.3rem;
+        }
+    }
+    </style>
+</head>
+<body>
+    <main>
+        <div class="card">
+            <h2>{% if edit_mode %}Edit Exam{% else %}Create Exam{% endif %}</h2>
+            <form method="POST" action="">
+                <label>Exam Title:<br><input type="text" name="title" required value="{{ exam.title if exam else '' }}"></label><br><br>
+                <label>Description:<br><textarea name="description" required>{{ exam.description if exam else '' }}</textarea></label><br><br>
+                <label>Price (INR):<br><input type="number" name="price" min="0" step="0.01" required value="{{ exam.price if exam else '' }}"></label><br><br>
+                <div id="questions">
+                    {% if questions %}
+                        {% for q in questions %}
+                        <div class="question-block">
+                            <label>Question:<br><input type="text" name="questions[{{ loop.index0 }}][question]" required value="{{ q.question }}"></label><br>
+                            <label>Option 1:<input type="text" name="questions[{{ loop.index0 }}][options][]" required value="{{ q.options[0] if q.options|length > 0 else '' }}"></label><br>
+                            <label>Option 2:<input type="text" name="questions[{{ loop.index0 }}][options][]" required value="{{ q.options[1] if q.options|length > 1 else '' }}"></label><br>
+                            <label>Option 3:<input type="text" name="questions[{{ loop.index0 }}][options][]" required value="{{ q.options[2] if q.options|length > 2 else '' }}"></label><br>
+                            <label>Option 4:<input type="text" name="questions[{{ loop.index0 }}][options][]" required value="{{ q.options[3] if q.options|length > 3 else '' }}"></label><br>
+                            <label>Correct Answer (must match one option):<input type="text" name="questions[{{ loop.index0 }}][correct_answer]" required value="{{ q.correct_answer }}"></label><br>
+                            <span class="remove-btn" onclick="this.parentElement.remove()">Remove</span>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <button type="button" onclick="addQuestion()">Add Question</button><br><br>
+                <button type="submit">{% if edit_mode %}Update Exam{% else %}Create Exam{% endif %}</button>
+            </form>
+        </div>
+    </main>
+    <script>
+    let qIndex = {{ questions|length if questions else 0 }};
+    function addQuestion() {
+        const questionsDiv = document.getElementById('questions');
+        const qBlock = document.createElement('div');
+        qBlock.className = 'question-block';
+        qBlock.innerHTML = `
+            <label>Question:<br><input type="text" name="questions[${qIndex}][question]" required></label><br>
+            <label>Option 1:<input type="text" name="questions[${qIndex}][options][]" required></label><br>
+            <label>Option 2:<input type="text" name="questions[${qIndex}][options][]" required></label><br>
+            <label>Option 3:<input type="text" name="questions[${qIndex}][options][]" required></label><br>
+            <label>Option 4:<input type="text" name="questions[${qIndex}][options][]" required></label><br>
+            <label>Correct Answer (must match one option):<input type="text" name="questions[${qIndex}][correct_answer]" required></label><br>
+            <span class="remove-btn" onclick="this.parentElement.remove()">Remove</span>
+        `;
+        questionsDiv.appendChild(qBlock);
+        qIndex++;
+    }
+    </script>
+</body>
+</html> 

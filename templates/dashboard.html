@@ -64,8 +64,27 @@
           {% endfor %}
         {% endif %}
       {% endwith %}
+      {% if user.dob and user.dob == now.strftime('%Y-%m-%d') %}
+        <div id="confetti"></div>
+        <div class="birthday-msg" style="margin-bottom:1.5rem;">Happy Birthday, {{ user.name or 'User' }}! 🎉</div>
+        <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+        <script>
+        // Confetti animation for birthday
+        confetti({
+          particleCount: 120,
+          spread: 80,
+          origin: { y: 0.6 },
+          colors: ['#1976d2', '#43a047', '#ffd700', '#f5576c', '#764ba2']
+        });
+        </script>
+      {% endif %}
       <h2>Welcome, {{ user.name }} </h2>
       <!-- <p>Use the menu to view upcoming exams, certificates, and your profile. You can only start an exam at or after its scheduled time.</p> -->
+      {% if user.admin %}
+      <div style="text-align:right;margin-bottom:1.5rem;">
+          <a href="{{ url_for('manage_exams') }}" class="btn" style="background:#2d7ff9;color:#fff;">Manage Exams</a>
+      </div>
+      {% endif %}
       <h3>Available Exams</h3>
       <div class="exam-list">
           {% for exam in exams %}

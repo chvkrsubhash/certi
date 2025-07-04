@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Exams</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+    body { background: #f7f8fa; font-family: 'Segoe UI', Arial, sans-serif; }
+    .card { max-width: 900px; margin: 2.5rem auto; background: #fff; border-radius: 16px; box-shadow: 0 4px 24px #e0e0e0; padding: 2.5rem 2rem; }
+    h2 { color: #2d3a4b; margin-bottom: 1.5rem; text-align: center; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 2rem; }
+    th, td { padding: 0.8rem 0.5rem; border-bottom: 1px solid #e0e0e0; text-align: left; }
+    th { background: #f6faff; color: #2d3a4b; font-weight: 600; }
+    tr:last-child td { border-bottom: none; }
+    .crud-btn { background: #2d7ff9; color: #fff; border: none; border-radius: 6px; padding: 0.5rem 1.1rem; font-size: 1rem; font-weight: 500; cursor: pointer; margin-right: 0.5rem; transition: background 0.2s; }
+    .crud-btn:hover { background: #1a5fd0; }
+    .delete-btn { background: #e74c3c; }
+    .delete-btn:hover { background: #b93222; }
+    .add-btn { background: #27ae60; margin-bottom: 1.5rem; }
+    .add-btn:hover { background: #1e8747; }
+    </style>
+</head>
+<body>
+    <main>
+        <div class="card">
+            <h2>Manage Exams</h2>
+            <a href="{{ url_for('create_exam') }}" class="crud-btn add-btn">+ Create New Exam</a>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for exam in exams %}
+                    <tr>
+                        <td>{{ exam.title }}</td>
+                        <td>{{ exam.description }}</td>
+                        <td>
+                            <a href="{{ url_for('edit_exam', exam_id=exam._id) }}" class="crud-btn">Edit</a>
+                            <a href="{{ url_for('view_questions', exam_id=exam._id) }}" class="crud-btn">Questions</a>
+                            <form method="POST" action="{{ url_for('delete_exam', exam_id=exam._id) }}" style="display:inline;">
+                                <button type="submit" class="crud-btn delete-btn" onclick="return confirm('Delete this exam and all its questions?')">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="3" style="text-align:center;">No exams found.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+</body>
+</html> 

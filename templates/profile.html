@@ -26,8 +26,39 @@
           {% endif %}
         {% endwith %}
         <h2>Profile</h2>
+        <div class="profile-avatar-container">
+            {% if user.avatar_url %}
+                <img src="{{ user.avatar_url }}" alt="Avatar" class="profile-avatar">
+            {% else %}
+                <div class="profile-avatar">
+                    {{ (user.name or user.email or 'U')[0:2]|upper }}
+                    {% if user.dob and user.dob == now.strftime('%Y-%m-%d') %}
+                        <span class="birthday-hat">&#127881;</span>
+                    {% endif %}
+                </div>
+            {% endif %}
+            {% if user.dob and user.dob == now.strftime('%Y-%m-%d') %}
+                <div id="confetti"></div>
+                <div class="birthday-msg">Happy Birthday, {{ user.name or 'User' }}! 🎉</div>
+            {% endif %}
+        </div>
         <p>Email: {{ user.email }}</p>
+        <p>Name: {{ user.name if user.name else 'Not set' }}</p>
+        <p>Date of Birth: {{ user.dob if user.dob else 'Not set' }}</p>
+        <a href="{{ url_for('edit_profile') }}" class="btn">Edit Profile</a>
         <!-- Add more profile info here if needed -->
+        <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+        <script>
+        {% if user.dob and user.dob == now.strftime('%Y-%m-%d') %}
+        // Confetti animation for birthday
+        confetti({
+          particleCount: 120,
+          spread: 80,
+          origin: { y: 0.6 },
+          colors: ['#1976d2', '#43a047', '#ffd700', '#f5576c', '#764ba2']
+        });
+        {% endif %}
+        </script>
     </main>
     <script>
     function toggleMenu() {
