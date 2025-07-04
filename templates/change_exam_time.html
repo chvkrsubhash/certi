@@ -3,6 +3,26 @@
 <head>
     <title>Change Exam Time</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+    .timezone-info {
+        background: #e3f2fd;
+        border: 1px solid #2196f3;
+        border-radius: 8px;
+        padding: 1rem;
+        margin: 1rem 0;
+        font-size: 0.95rem;
+        color: #1976d2;
+    }
+    .timezone-display {
+        background: #f5f5f5;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 0.8rem;
+        margin: 0.5rem 0;
+        font-family: monospace;
+        font-size: 0.9rem;
+    }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -28,12 +48,33 @@
         <div class="exam-item">
             <h2>Change Exam Time</h2>
             <p><strong>Exam:</strong> {{ schedule.exam_id }}</p>
-            <p><strong>Current Date & Time:</strong> {{ schedule.date_display }} IST</p>
+            <p><strong>Current Date & Time:</strong> {{ schedule.date_display }} {{ schedule.timezone_abbr if schedule.timezone_abbr else '' }}</p>
             <form method="post">
-                <label for="new_date">Select New Date & Time (IST):</label>
+                <label for="timezone">Select Your Timezone:</label>
+                <select id="timezone" name="timezone" required>
+                    <option value="">Select your timezone</option>
+                    <option value="Asia/Kolkata">Asia/Kolkata (IST - UTC+5:30)</option>
+                    <option value="America/New_York">America/New_York (EST/EDT)</option>
+                    <option value="America/Los_Angeles">America/Los_Angeles (PST/PDT)</option>
+                    <option value="Europe/London">Europe/London (GMT/BST)</option>
+                    <option value="Europe/Paris">Europe/Paris (CET/CEST)</option>
+                    <option value="Asia/Tokyo">Asia/Tokyo (JST - UTC+9)</option>
+                    <option value="Australia/Sydney">Australia/Sydney (AEST/AEDT)</option>
+                    <option value="Asia/Dubai">Asia/Dubai (GST - UTC+4)</option>
+                    <option value="Asia/Singapore">Asia/Singapore (SGT - UTC+8)</option>
+                    <option value="Asia/Shanghai">Asia/Shanghai (CST - UTC+8)</option>
+                </select>
+                
+                <label for="new_date">Select New Date & Time (in your timezone):</label>
                 <input type="datetime-local" id="new_date" name="new_date" required>
-                <div style="font-size:0.97em;color:#b57c00;margin-bottom:0.5rem;">Please select the date and time in IST (Indian Standard Time).</div>
-                <div id="ist-confirm" style="font-size:1em;color:#00796b;margin-bottom:1rem;"></div>
+                
+                <div class="timezone-info">
+                    <strong>Timezone Information:</strong>
+                    <div id="timezone-display" class="timezone-display">
+                        Please select your timezone and date/time to see the conversion.
+                    </div>
+                </div>
+                
                 <input type="submit" value="Update Time">
             </form>
         </div>
@@ -43,23 +84,103 @@
       var menu = document.getElementById('menu');
       menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
     }
-    // Show selected value as confirmation (no conversion, just show input value as IST)
-    var dateInput = document.getElementById('new_date');
-    var istConfirm = document.getElementById('ist-confirm');
-    function showIST() {
-      if (!dateInput.value) { istConfirm.innerText = ''; return; }
-      // Format as YYYY-MM-DD HH:MM IST from input value
-      var val = dateInput.value;
-      if (val.length === 16) {
-        var datePart = val.substring(0,10);
-        var timePart = val.substring(11,16);
-        istConfirm.innerText = 'You selected: ' + datePart + ' ' + timePart + ' IST';
-      } else {
-        istConfirm.innerText = 'You selected: ' + val + ' IST';
+    
+    // Timezone handling
+    document.addEventListener('DOMContentLoaded', function() {
+      var timezoneSelect = document.getElementById('timezone');
+      var dateInput = document.getElementById('new_date');
+      var timezoneDisplay = document.getElementById('timezone-display');
+      
+      // Auto-detect user's timezone
+      function detectUserTimezone() {
+        try {
+          const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+          const timezoneOptions = Array.from(timezoneSelect.options);
+          const matchingOption = timezoneOptions.find(option => option.value === userTimezone);
+          
+          if (matchingOption) {
+            timezoneSelect.value = userTimezone;
+            updateTimezoneDisplay();
+          }
+        } catch (e) {
+          console.log('Could not detect timezone:', e);
+        }
       }
-    }
-    dateInput && dateInput.addEventListener('input', showIST);
-    showIST();
+      
+      // Update timezone display
+      function updateTimezoneDisplay() {
+        const selectedTimezone = timezoneSelect.value;
+        const selectedDate = dateInput.value;
+        
+        if (!selectedTimezone || !selectedDate) {
+          timezoneDisplay.innerHTML = 'Please select your timezone and date/time to see the conversion.';
+          return;
+        }
+        
+        try {
+          // Create a date object from the input
+          const localDateTime = new Date(selectedDate + ':00');
+          
+          // Format the date in user's timezone
+          const userTime = localDateTime.toLocaleString('en-US', {
+            timeZone: selectedTimezone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          });
+          
+          // Get timezone offset
+          const utcTime = localDateTime.toLocaleString('en-US', {
+            timeZone: 'UTC',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+          });
+          
+          // Get timezone abbreviation
+          const timezoneAbbr = getTimezoneAbbreviation(selectedTimezone);
+          
+          timezoneDisplay.innerHTML = `
+            <strong>Your Local Time:</strong> ${userTime} ${timezoneAbbr}<br>
+            <strong>UTC Time (stored):</strong> ${utcTime} UTC<br>
+            <strong>Timezone:</strong> ${selectedTimezone}
+          `;
+        } catch (e) {
+          timezoneDisplay.innerHTML = 'Error calculating timezone conversion. Please try again.';
+        }
+      }
+      
+      // Get timezone abbreviation
+      function getTimezoneAbbreviation(timezone) {
+        const abbreviations = {
+          'Asia/Kolkata': 'IST',
+          'America/New_York': 'EST/EDT',
+          'America/Los_Angeles': 'PST/PDT',
+          'Europe/London': 'GMT/BST',
+          'Europe/Paris': 'CET/CEST',
+          'Asia/Tokyo': 'JST',
+          'Australia/Sydney': 'AEST/AEDT',
+          'Asia/Dubai': 'GST',
+          'Asia/Singapore': 'SGT',
+          'Asia/Shanghai': 'CST'
+        };
+        return abbreviations[timezone] || timezone;
+      }
+      
+      // Event listeners
+      timezoneSelect.addEventListener('change', updateTimezoneDisplay);
+      dateInput.addEventListener('input', updateTimezoneDisplay);
+      
+      // Initialize
+      detectUserTimezone();
+      updateTimezoneDisplay();
+    });
     </script>
 </body>
 </html> 

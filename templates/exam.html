@@ -50,24 +50,51 @@
         <div class="card" style="padding:0;box-shadow:none;background:none;">
             {% if not show_questions %}
                 <div id="timer" style="font-size:1.3rem;margin-bottom:1.5rem;"></div>
-                <div class="flash flash-error">The exam will be available at {{ scheduled_time.strftime('%Y-%m-%d %H:%M') }} IST. Please wait for the timer to reach zero.</div>
+                <div class="flash flash-error">
+                    The exam will be available at {{ scheduled_time.strftime('%Y-%m-%d %H:%M') }} {{ timezone_abbr }}. Please wait for the timer to reach zero.
+                    <br><small style="color:#666;">Your timezone: {{ user_timezone }}</small>
+                </div>
                 <script>
-                var scheduledTime = new Date("{{ scheduled_time.strftime('%Y-%m-%dT%H:%M:%S') }}Z");
+                // Get the scheduled time in UTC from server
+                var scheduledTimeUTC = new Date("{{ scheduled_time_js }}Z");
                 var timerDiv = document.getElementById('timer');
+                
                 function updateTimer() {
                   var current = new Date();
-                  var distance = scheduledTime.getTime() - current.getTime();
+                  var distance = scheduledTimeUTC.getTime() - current.getTime();
+                  
                   if (distance <= 0) {
                     timerDiv.innerHTML = 'Exam is now available. Loading...';
                     setTimeout(function() { location.reload(); }, 1500);
                     return;
                   }
+                  
                   var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                   var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                   var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-                  timerDiv.innerHTML = 'Time until exam: ' + (hours > 0 ? hours + ':' : '') + (minutes < 10 ? '0' : '') + minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+                  
+                  // Format the countdown
+                  var timeString = '';
+                  if (hours > 0) {
+                    timeString += hours + ':';
+                  }
+                  timeString += (minutes < 10 ? '0' : '') + minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+                  
+                  // Get current local time
+                  var now = new Date();
+                  var localTime = now.toLocaleString('en-US', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                  });
+                  
+                  timerDiv.innerHTML = 'Current time: ' + localTime + ' | Time until exam: ' + timeString;
                   setTimeout(updateTimer, 1000);
                 }
+                
                 updateTimer();
                 </script>
             {% else %}

@@ -59,7 +59,7 @@
             {% for s in schedules %}
                 <tr>
                     <td>{{ s.exam.title }}</td>
-                    <td>{{ s.date_display }}</td>
+                    <td>{{ s.date_display }} {{ s.timezone_abbr if s.timezone_abbr else '' }}</td>
                     <td>
                         {% set completed = false %}
                         {% for r in s.exam_results if r.schedule_id == s._id %}
@@ -68,7 +68,7 @@
                         {% if completed %}
                             <button disabled>Completed</button>
                         {% else %}
-                                <button {% if s.date_display > now.strftime('%Y-%m-%d %H:%M') %}disabled title="Exam will be available at {{ s.date_display }} IST"{% endif %}>
+                                <button {% if s.date_display > now.strftime('%Y-%m-%d %H:%M') %}disabled title="Exam will be available at {{ s.date_display }} {{ s.timezone_abbr if s.timezone_abbr else '' }}"{% endif %}>
                                   <a href="{{ url_for('exam', schedule_id=s._id) }}">
                                     Give Test
                                   </a>
@@ -81,7 +81,7 @@
                             {% endif %}
                             <br>
                             {% if s.date_display > now.strftime('%Y-%m-%d %H:%M') %}
-                                <span style="color:gray; font-size:0.95em;">Exam will be available at {{ s.date_display }} IST</span>
+                                <span style="color:gray; font-size:0.95em;">Exam will be available at {{ s.date_display }} {{ s.timezone_abbr if s.timezone_abbr else '' }}</span>
                             {% endif %}                            
                         {% endif %}
                     </td>

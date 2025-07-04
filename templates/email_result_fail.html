@@ -1,31 +1,100 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Exam Attempt Report</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f6f8fa;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .report-container {
+      background-color: #ffffff;
+      width: 100%;
+      max-width: 600px;
+      padding: 30px;
+      border: 2px solid #d32f2f;
+      border-radius: 10px;
+    }
+
+    .report-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .report-title {
+      font-size: 28px;
+      font-weight: bold;
+      color: #d32f2f;
+    }
+
+    .report-body {
+      text-align: center;
+      margin: 30px 0;
+    }
+
+    .report-text {
+      font-size: 16px;
+      color: #333;
+      margin: 10px 0;
+    }
+
+    .report-link {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: bold;
+      text-decoration: none;
+      color: #ffffff;
+      background-color: #1976d2;
+      border-radius: 4px;
+    }
+
+    .report-footer {
+      margin-top: 30px;
+      text-align: center;
+      font-size: 13px;
+      color: #777;
+    }
+
+    @media (max-width: 600px) {
+      .report-container {
+        padding: 20px;
+      }
+
+      .report-title {
+        font-size: 22px;
+      }
+    }
+  </style>
 </head>
-<body style="font-family: Arial, sans-serif; background: #f6f8fa; margin: 0; padding: 0;">
-  <table width="100%" bgcolor="#f6f8fa" cellpadding="0" cellspacing="0" style="padding: 40px 0;">
-    <tr>
-      <td align="center">
-        <table width="600" bgcolor="#fff" cellpadding="0" cellspacing="0" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 40px;">
-          <tr>
-            <td align="center">
-              <h1 style="color: #d32f2f;">Exam Attempt Report</h1>
-              <p style="font-size: 18px; color: #333;">Dear {{ name }},</p>
-              <p style="font-size: 16px; color: #555;">You did <strong>not pass</strong> the <strong>{{ course }}</strong> exam.</p>
-              <p style="font-size: 16px; color: #555;">Score: <strong>{{ score }}%</strong></p>
-              <p style="font-size: 16px; color: #555;">Date: <strong>{{ date }}</strong></p>
-              <p style="font-size: 16px; color: #555;">You can retake the exam after 14 days.</p>
-              <a href="{{ resources_url }}" style="display: inline-block; margin: 20px 0 0 0; padding: 12px 28px; background: #1976d2; color: #fff; text-decoration: none; border-radius: 4px; font-size: 16px;">View Recommended Resources</a>
-              <p style="margin-top: 30px; color: #888; font-size: 15px;">A detailed PDF report is attached to this email.</p>
-              <hr style="margin: 32px 0; border: none; border-top: 1px solid #eee;">
-              <p style="color: #aaa; font-size: 13px;">Thank you for your effort.<br>— The Exam Team</p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
+<body>
+  <div class="report-container">
+    <div class="report-header">
+      <h1 class="report-title">Exam Attempt Report</h1>
+    </div>
+
+    <div class="report-body">
+      <p class="report-text">Dear {{ name }},</p>
+      <p class="report-text">You did <strong>not pass</strong> the <strong>{{ course }}</strong> exam.</p>
+      <p class="report-text">Score: <strong>{{ score }}%</strong></p>
+      <p class="report-text">Date: <strong>{{ date }}</strong></p>
+      <p class="report-text">You can retake the exam after 14 days.</p>
+      <a href="{{ resources_url }}" class="report-link">View Recommended Resources</a>
+      <p class="report-text" style="color: #888; font-size: 14px; margin-top: 30px;">A detailed PDF report is attached to this email.</p>
+    </div>
+
+    <div class="report-footer">
+      <p>Thank you for your effort.<br>— The Exam Team</p>
+    </div>
+  </div>
 </body>
-</html> 
+</html>

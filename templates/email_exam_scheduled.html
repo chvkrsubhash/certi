@@ -5,43 +5,34 @@
   <title>Exam Scheduled</title>
 </head>
 <body style="font-family: Arial, sans-serif; background: #f6f8fa; margin: 0; padding: 0;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="padding: 20px 0;">
+  <table width="100%" bgcolor="#f6f8fa" cellpadding="0" cellspacing="0" style="padding: 40px 0;">
     <tr>
       <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border: 1px solid #ddd; padding: 20px;">
+        <table width="600" bgcolor="#fff" cellpadding="0" cellspacing="0" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 40px;">
           <tr>
             <td align="center">
-              <h2>Exam Scheduled</h2>
-              <p>Hello {{ name }},</p>
-              <p>Your exam <strong>{{ exam_title }}</strong> is scheduled for:</p>
-              <p><strong>{{ date_display }}</strong></p>
-              <p>Amount Paid: <strong>₹{{ amount_paid }}</strong></p>
-
-              <p>
-                <a href="{{ exam_url }}" style="display: inline-block; background-color: #1976d2; color: #ffffff; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Go to Exam</a>
-              </p>
-
-              <p style="font-size: 14px; color: #555;">You can access the exam at the scheduled time from your dashboard or using the button above.</p>
-
-              <table width="100%" cellpadding="10" cellspacing="0" style="border: 1px solid #ccc; background-color: #f9f9f9; margin-top: 20px;">
-                <tr>
-                  <td>
-                    <strong>Exam Instructions:</strong>
-                    <ul style="padding-left: 20px; font-size: 14px;">
-                      <li>Be ready at least 10 minutes before your scheduled time.</li>
-                      <li>Have a stable internet connection throughout the exam.</li>
-                      <li>Keep your ID proof handy for verification if required.</li>
-                      <li>Do not refresh or close the exam window during the test.</li>
-                      <li>Each question is mandatory and must be answered in sequence.</li>
-                      <li>Once submitted, answers cannot be changed.</li>
-                      <li>Any suspicious activity may result in disqualification.</li>
-                      <li>Contact support if you face any technical issues.</li>
-                    </ul>
-                  </td>
-                </tr>
-              </table>
-
-              <p style="font-size: 12px; color: #999; margin-top: 20px;">Thank you for scheduling your exam.<br>— The Exam Team</p>
+              <h1 style="color: #1976d2;">Exam Scheduled</h1>
+              <p style="font-size: 18px; color: #333;">Hello {{ name }},</p>
+              <p style="font-size: 16px; color: #555;">Your exam <strong>{{ exam_title }}</strong> is scheduled for:</p>
+              <p style="font-size: 16px; color: #1976d2;"><strong>{{ date_display }} {{ timezone_abbr }}</strong></p>
+              <p style="font-size: 16px; color: #555;">Amount Paid: <strong>₹{{ amount_paid }}</strong></p>
+              <a href="{{ exam_url }}" style="display: inline-block; margin: 24px 0 0 0; padding: 12px 28px; background: #1976d2; color: #fff; text-decoration: none; border-radius: 4px; font-size: 16px;">Go to Exam</a>
+              <p style="margin-top: 30px; color: #888; font-size: 15px;">You can access the exam at the scheduled time from your dashboard or using the button above.</p>
+              <div style="margin: 32px 0 0 0; padding: 24px 20px; background: #f5f7fa; border-radius: 8px; border: 1.5px solid #e0e0e0; text-align: left; max-width: 480px;">
+                <h3 style="color: #1976d2; margin-top: 0;">Exam Instructions</h3>
+                <ul style="color: #444; font-size: 15px; padding-left: 20px;">
+                  <li>Be ready at least 10 minutes before your scheduled time.</li>
+                  <li>Have a stable internet connection throughout the exam.</li>
+                  <li>Keep your ID proof handy for verification if required.</li>
+                  <li>Do not refresh or close the exam window during the test.</li>
+                  <li>Each question is mandatory and must be answered in sequence.</li>
+                  <li>Once submitted, answers cannot be changed.</li>
+                  <li>Any suspicious activity may result in disqualification.</li>
+                  <li>Contact support if you face any technical issues.</li>
+                </ul>
+              </div>
+              <hr style="margin: 32px 0; border: none; border-top: 1px solid #eee;">
+              <p style="color: #aaa; font-size: 13px;">Thank you for scheduling your exam.<br>— The Exam Team</p>
             </td>
           </tr>
         </table>
@@ -49,4 +40,4 @@
     </tr>
   </table>
 </body>
-</html>
+</html> 
